@@ -14,9 +14,20 @@ var romanToInt = map[string]int{
 	"VI": 6, "VII": 7, "VIII": 8, "IX": 9, "X": 10,
 }
 
-var intToRoman = map[int]string{
-	1: "I", 2: "II", 3: "III", 4: "IV", 5: "V",
-	6: "VI", 7: "VII", 8: "VIII", 9: "IX", 10: "X",
+var intToRoman = []struct {
+	Value  int
+	Symbol string
+}{
+	{10, "X"},
+	{9, "IX"},
+	{8, "VIII"},
+	{7, "VII"},
+	{6, "VI"},
+	{5, "V"},
+	{4, "IV"},
+	{3, "III"},
+	{2, "II"},
+	{1, "I"},
 }
 
 func main() {
@@ -87,7 +98,7 @@ func calculateRoman(a, b int, op string) (string, error) {
 		return "", errors.New("в римской системе нет отрицательных чисел или нуля")
 	}
 
-	return intToRoman[result], nil
+	return intToRomanExtended(result), nil
 }
 
 func calculateArabic(a, b int, op string) (string, error) {
@@ -109,4 +120,15 @@ func calculateArabic(a, b int, op string) (string, error) {
 	}
 
 	return strconv.Itoa(result), nil
+}
+
+func intToRomanExtended(num int) string {
+	var result strings.Builder
+	for _, entry := range intToRoman {
+		for num >= entry.Value {
+			result.WriteString(entry.Symbol)
+			num -= entry.Value
+		}
+	}
+	return result.String()
 }
