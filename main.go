@@ -2,7 +2,6 @@ package main
 
 import (
 	"bufio"
-	"errors"
 	"fmt"
 	"os"
 	"strconv"
@@ -18,15 +17,18 @@ var intToRoman = []struct {
 	Value  int
 	Symbol string
 }{
+	{1000, "M"},
+	{900, "CM"},
+	{500, "D"},
+	{400, "CD"},
+	{100, "C"},
+	{90, "XC"},
+	{50, "L"},
+	{40, "XL"},
 	{10, "X"},
 	{9, "IX"},
-	{8, "VIII"},
-	{7, "VII"},
-	{6, "VI"},
 	{5, "V"},
 	{4, "IV"},
-	{3, "III"},
-	{2, "II"},
 	{1, "I"},
 }
 
@@ -36,19 +38,20 @@ func main() {
 	input, _ := reader.ReadString('\n')
 	input = strings.TrimSpace(input)
 
-	result, err := calculate(input)
-	if err != nil {
-		fmt.Println("Ошибка:", err)
-		return
-	}
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Println("Ошибка:", r)
+		}
+	}()
 
+	result := calculate(input)
 	fmt.Println("Output:", result)
 }
 
-func calculate(input string) (string, error) {
+func calculate(input string) string {
 	parts := strings.Split(input, " ")
 	if len(parts) != 3 {
-		return "", errors.New("строка не является математической операцией")
+		panic("строка не является математической операцией")
 	}
 
 	aStr, op, bStr := parts[0], parts[1], parts[2]
@@ -58,9 +61,11 @@ func calculate(input string) (string, error) {
 
 	if isRomanA && isRomanB {
 		if a < 1 || a > 10 || b < 1 || b > 10 {
-			return "", errors.New("римские числа должны быть в диапазоне от I до X")
+			panic("римские числа должны быть в диапазоне от I до X")
 		}
 		return calculateRoman(a, b, op)
+	} else if isRomanA || isRomanB {
+		panic("римские числа должны быть в диапазоне от I до X")
 	}
 
 	aInt, errA := strconv.Atoi(aStr)
@@ -68,15 +73,15 @@ func calculate(input string) (string, error) {
 
 	if errA == nil && errB == nil {
 		if aInt < 1 || aInt > 10 || bInt < 1 || bInt > 10 {
-			return "", errors.New("арабские числа должны быть в диапазоне от 1 до 10")
+			panic("арабские числа должны быть в диапазоне от 1 до 10")
 		}
 		return calculateArabic(aInt, bInt, op)
 	}
 
-	return "", errors.New("используются одновременно разные системы счисления или неверный формат чисел")
+	panic("используются одновременно разные системы счисления или неверный формат чисел")
 }
 
-func calculateRoman(a, b int, op string) (string, error) {
+func calculateRoman(a, b int, op string) string {
 	var result int
 	switch op {
 	case "+":
@@ -87,21 +92,21 @@ func calculateRoman(a, b int, op string) (string, error) {
 		result = a * b
 	case "/":
 		if b == 0 {
-			return "", errors.New("деление на ноль")
+			panic("деление на ноль")
 		}
 		result = a / b
 	default:
-		return "", errors.New("неизвестная операция")
+		panic("неизвестная операция")
 	}
 
 	if result < 1 {
-		return "", errors.New("в римской системе нет отрицательных чисел или нуля")
+		panic("в римской системе нет отрицательных чисел или нуля")
 	}
 
-	return intToRomanExtended(result), nil
+	return intToRomanExtended(result)
 }
 
-func calculateArabic(a, b int, op string) (string, error) {
+func calculateArabic(a, b int, op string) string {
 	var result int
 	switch op {
 	case "+":
@@ -112,14 +117,14 @@ func calculateArabic(a, b int, op string) (string, error) {
 		result = a * b
 	case "/":
 		if b == 0 {
-			return "", errors.New("деление на ноль")
+			panic("деление на ноль")
 		}
 		result = a / b
 	default:
-		return "", errors.New("неизвестная операция")
+		panic("неизвестная операция")
 	}
 
-	return strconv.Itoa(result), nil
+	return strconv.Itoa(result)
 }
 
 func intToRomanExtended(num int) string {
